@@ -1,12 +1,22 @@
+MODIFY src/serve_prompt_capture.py
+
+    1. add def generate_conversation(request: JSON) -> Conversation:
+
 ```python
 import llm
 
 model = llm.get_model()
-conversation = model.conversation()
+conversation: Conversation = model.conversation()
 ```
 
+    2. modify generate_conversation:
+    the request object will look like what's provided in <json_example>. I want you to modify the `conversation` object to include the `messages` in the conversation, like it already happen.
+    You can find relevant information about the code structure of the `conversation` object in <code_structure>.
+
+<json_example>
+
 ````json
-Received request: {
+{
   "messages": [
     {
       "role": "system",
@@ -38,7 +48,7 @@ Received request: {
   "temperature": 0
 }
 
-Received request: {
+{
   "messages": [
     {
       "role": "system",
@@ -81,6 +91,10 @@ Received request: {
       "content": "this is a test. It might return an error"
     },
     {
+      "role": "assistant",
+      "content": "ok, this is the code change"
+    },
+    {
       "role": "user",
       "content": "create src/main.py in which you implement the fibonacci sequence\n\nTo suggest changes to a file you MUST return the entire content of the updated file.\nYou MUST use this *file listing* format:\n\npath/to/filename.js\n```\n// entire file content ...\n// ... goes in between\n```\n\nEvery *file listing* MUST use this format:\n- First line: the filename with any originally provided path; no extra markup, punctuation, comments, etc. **JUST** the filename with path.\n- Second line: opening ```\n- ... entire content of the file ...\n- Final line: closing ```\n\nTo suggest changes to a file you MUST return a *file listing* that contains the entire content of the file.\n*NEVER* skip, omit or elide content from a *file listing* using \"...\" or by adding comments like \"... rest of code...\"!\nCreate a new file you MUST return a *file listing* which includes an appropriate filename, including any appropriate path.\n\n\n"
     }
@@ -90,7 +104,7 @@ Received request: {
   "temperature": 0
 }
 
-Received request: {
+{
   "messages": [
     {
       "role": "system",
@@ -138,6 +152,10 @@ Received request: {
   "temperature": 0
 }
 ````
+
+</json_example>
+
+<code_structure>
 
 ```python
 @dataclass
@@ -239,3 +257,5 @@ class _BaseResponse:
         self.token_details: Optional[dict] = None
         self.done_callbacks: List[Callable] = []
 ```
+
+</code_structure>
