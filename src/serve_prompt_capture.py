@@ -5,13 +5,13 @@ from typing import Any, Dict, List
 import uvicorn
 from fastapi import FastAPI, Request
 from llm import get_model
-from llm.conversation import Conversation, Prompt, _BaseResponse
+from llm.models import Conversation, Prompt, _BaseResponse
 
 app = FastAPI()
 
 
 def generate_conversation(request: Dict[str, Any]) -> Conversation:
-    model = get_model(request.get("model", "gpt-3.5-turbo"))
+    model = get_model("deepseek-chat")
     conversation = model.conversation()
 
     # Create fake responses for the conversation history
@@ -34,7 +34,7 @@ def generate_conversation(request: Dict[str, Any]) -> Conversation:
             response._chunks = [message["content"]]
             response._done = True
             response._start = datetime.datetime.now().timestamp()
-            response._end = response._start + 1.0  # Fake duration
+            response._end = response._start
 
         responses.append(response)
 
