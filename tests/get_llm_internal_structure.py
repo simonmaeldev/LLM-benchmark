@@ -2,17 +2,33 @@ import json
 import dataclasses
 import llm
 
-def conversation_to_dict(obj):
+def conversation_to_dict(obj, visited=None):
     """Convert conversation object and its nested objects to a dictionary."""
-    if dataclasses.is_dataclass(obj):
-        return {k: conversation_to_dict(v) for k, v in dataclasses.asdict(obj).items()}
-    elif isinstance(obj, (list, tuple)):
-        return [conversation_to_dict(x) for x in obj]
-    elif isinstance(obj, dict):
-        return {k: conversation_to_dict(v) for k, v in obj.items()}
-    elif hasattr(obj, '__dict__'):
-        return {k: conversation_to_dict(v) for k, v in obj.__dict__.items()}
-    return obj
+    if visited is None:
+        visited = set()
+
+    # Handle None
+    if obj is None:
+        return None
+
+    # Get object id to track visited objects
+    obj_id = id(obj)
+    if obj_id in visited:
+        return "CIRCULAR_REFERENCE"
+    visited.add(obj_id)
+
+    try:
+        if dataclasses.is_dataclass(obj):
+            return {k: conversation_to_dict(v, visited) for k, v in dataclasses.asdict(obj).items()}
+        elif isinstance(obj, (list, tuple)):
+            return [conversation_to_dict(x, visited) for x in obj]
+        elif isinstance(obj, dict):
+            return {k: conversation_to_dict(v, visited) for k, v in obj.items()}
+        elif hasattr(obj, '__dict__'):
+            return {k: conversation_to_dict(v, visited) for k, v in obj.__dict__.items()}
+        return obj
+    finally:
+        visited.remove(obj_id)
 
 model = llm.get_model("deepseek-chat")
 conversation = model.conversation()
