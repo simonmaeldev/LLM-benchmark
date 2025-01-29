@@ -1,12 +1,13 @@
+import dataclasses
 import datetime
 import json
-import dataclasses
 from typing import Any, Dict, List
 
 import uvicorn
 from fastapi import FastAPI, Request
 from llm import get_model
 from llm.models import Conversation, Prompt, _BaseResponse
+
 
 def conversation_to_dict(obj):
     """Convert conversation object and its nested objects to a dictionary."""
@@ -16,9 +17,10 @@ def conversation_to_dict(obj):
         return [conversation_to_dict(x) for x in obj]
     elif isinstance(obj, dict):
         return {k: conversation_to_dict(v) for k, v in obj.items()}
-    elif hasattr(obj, '__dict__'):
+    elif hasattr(obj, "__dict__"):
         return {k: conversation_to_dict(v) for k, v in obj.__dict__.items()}
     return obj
+
 
 app = FastAPI()
 
@@ -65,9 +67,6 @@ async def capture_completion(request: Request):
     # Save conversation to JSON file
     with open(f"conversation_{conversation.id}.json", "w") as f:
         json.dump(conversation_to_dict(conversation), f, indent=2, default=str)
-    # Save conversation to JSON file
-    with open(f"conversation_{conversation.id}.json", "w") as f:
-        json.dump(conversation_to_dict(conversation), f, indent=2, default=str)
     return {"message": "Request captured", "conversation_id": conversation.id}
 
 
@@ -76,6 +75,9 @@ async def capture_chat_completion(request: Request):
     body = await request.json()
     print("Received request:", json.dumps(body, indent=2))
     conversation = generate_conversation(body)
+    # Save conversation to JSON file
+    with open(f"conversation_{conversation.id}.json", "w") as f:
+        json.dump(conversation_to_dict(conversation), f, indent=2, default=str)
     return {"message": "Request captured", "conversation_id": conversation.id}
 
 
