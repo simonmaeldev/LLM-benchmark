@@ -1,4 +1,18 @@
+import json
+import dataclasses
 import llm
+
+def conversation_to_dict(obj):
+    """Convert conversation object and its nested objects to a dictionary."""
+    if dataclasses.is_dataclass(obj):
+        return {k: conversation_to_dict(v) for k, v in dataclasses.asdict(obj).items()}
+    elif isinstance(obj, (list, tuple)):
+        return [conversation_to_dict(x) for x in obj]
+    elif isinstance(obj, dict):
+        return {k: conversation_to_dict(v) for k, v in obj.items()}
+    elif hasattr(obj, '__dict__'):
+        return {k: conversation_to_dict(v) for k, v in obj.__dict__.items()}
+    return obj
 
 model = llm.get_model("deepseek-chat")
 conversation = model.conversation()
@@ -22,6 +36,9 @@ def run():
     for chunk in response3:
         print(chunk, end="")
 
+    # Save conversation to JSON file
+    with open(f"test_conversation_{conversation.id}.json", "w") as f:
+        json.dump(conversation_to_dict(conversation), f, indent=2, default=str)
     print(conversation)
 
 
