@@ -9,14 +9,18 @@ from llm import get_model
 from llm.models import Conversation, Prompt, _BaseResponse
 
 
-def conversation_to_dict(obj, visited=None):
+def conversation_to_dict(obj, visited=None, depth=0):
     """Convert conversation object and its nested objects to a dictionary."""
+    # Limit recursion depth
+    if depth > 100:  # arbitrary limit to prevent stack overflow
+        return "MAX_DEPTH_REACHED"
+    
     if visited is None:
         visited = set()
 
-    # Handle None
-    if obj is None:
-        return None
+    # Handle None and primitive types
+    if obj is None or isinstance(obj, (str, int, float, bool)):
+        return obj
 
     # Get object id to track visited objects
     obj_id = id(obj)
@@ -26,14 +30,24 @@ def conversation_to_dict(obj, visited=None):
 
     try:
         if dataclasses.is_dataclass(obj):
-            return {k: conversation_to_dict(v, visited) for k, v in dataclasses.asdict(obj).items()}
+            return {k: conversation_to_dict(v, visited, depth + 1) 
+                   for k, v in dataclasses.asdict(obj).items()}
         elif isinstance(obj, (list, tuple)):
-            return [conversation_to_dict(x, visited) for x in obj]
+            return [conversation_to_dict(x, visited, depth + 1) for x in obj]
         elif isinstance(obj, dict):
-            return {k: conversation_to_dict(v, visited) for k, v in obj.items()}
+            return {str(k): conversation_to_dict(v, visited, depth + 1) 
+                   for k, v in obj.items()}
         elif hasattr(obj, '__dict__'):
-            return {k: conversation_to_dict(v, visited) for k, v in obj.__dict__.items()}
-        return obj
+            return {k: conversation_to_dict(v, visited, depth + 1) 
+                   for k, v in vars(obj).items() 
+                   if not k.startswith('_')}  # Skip private attributes
+        # Handle other types that might be problematic
+        elif hasattr(obj, '__slots__'):
+            return {slot: conversation_to_dict(getattr(obj, slot), visited, depth + 1) 
+                   for slot in obj.__slots__ 
+                   if hasattr(obj, slot)}
+        # Convert any other type to string
+        return str(obj)
     finally:
         visited.remove(obj_id)
 
