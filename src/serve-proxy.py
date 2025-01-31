@@ -1,3 +1,4 @@
+import asyncio
 import json
 import time
 
@@ -103,9 +104,15 @@ async def chat_completions(request: ChatCompletionRequest):
                 temperature=request.temperature,
             )
 
+            # Convert sync iterator to async
+            def sync_iterator():
+                for chunk in response:
+                    yield chunk
+
             # Stream chunks
-            async for chunk in response:
+            for chunk in sync_iterator():
                 yield create_chunk(chunk)
+                await asyncio.sleep(0)  # Yield control back to event loop
 
             # Final chunks
             yield create_chunk("", finish_reason="stop")
