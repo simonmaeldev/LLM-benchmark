@@ -34,20 +34,23 @@ def generate_conversation(request: ChatCompletionRequest) -> Conversation:
         system = msg.content if msg.role == "system" else None
         prompt_text = msg.content if msg.role != "system" else None
 
-        # Create a dummy response with zero token usage
+        # Create a response with pre-filled text to avoid recursion
         response = Response(
             prompt=Prompt(
-                prompt=prompt_text, model=model, system=system, options=model.Options()
+                prompt=prompt_text, 
+                model=model, 
+                system=system, 
+                options=model.Options()
             ),
             model=model,
             stream=False,
             conversation=conversation,
         )
-
-        # Set dummy timing and token values
-        now = time.time()
-        response._start = now
-        response._end = now
+        
+        # Directly set the response text instead of evaluating it
+        response._text = msg.content
+        response._start = time.time()
+        response._end = time.time()
         response.input_tokens = 0
         response.output_tokens = 0
 
