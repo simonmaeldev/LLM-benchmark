@@ -47,8 +47,9 @@ def generate_conversation(request: ChatCompletionRequest) -> Conversation:
             conversation=conversation,
         )
         
-        # Directly set the response text instead of evaluating it
-        response._text = msg.content
+        # Set response properties directly
+        response._chunks = [msg.content]
+        response._done = True
         response._start = time.time()
         response._end = time.time()
         response.input_tokens = 0
