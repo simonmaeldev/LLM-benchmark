@@ -30,23 +30,34 @@ def generate_conversation(request: ChatCompletionRequest) -> Conversation:
 
     # Add all messages except last one as history
     for msg in request.messages[:-1]:
-        # System messages become prompts with system instructions
-        system = msg.content if msg.role == "system" else None
-        prompt_text = msg.content if msg.role != "system" else None
+        # Handle different message types
+        if msg.role == 'system':
+            # System messages become prompts with system instructions
+            response = Response(
+                prompt=Prompt(
+                    prompt="",  # Empty prompt for system messages
+                    model=model,
+                    system=msg.content,
+                    options=model.Options()
+                ),
+                model=model,
+                stream=False,
+                conversation=conversation,
+            )
+        else:
+            # User/assistant messages
+            response = Response(
+                prompt=Prompt(
+                    prompt=msg.content,
+                    model=model,
+                    system=None,
+                    options=model.Options()
+                ),
+                model=model,
+                stream=False,
+                conversation=conversation,
+            )
 
-        # Create a response with pre-filled text to avoid recursion
-        response = Response(
-            prompt=Prompt(
-                prompt=prompt_text, 
-                model=model, 
-                system=system, 
-                options=model.Options()
-            ),
-            model=model,
-            stream=False,
-            conversation=conversation,
-        )
-        
         # Set response properties directly
         response._chunks = [msg.content]
         response._done = True
@@ -54,6 +65,16 @@ def generate_conversation(request: ChatCompletionRequest) -> Conversation:
         response._end = time.time()
         response.input_tokens = 0
         response.output_tokens = 0
+
+        # For user messages, simulate attachment structure
+        if msg.role == 'user':
+            response.prompt.attachments = [
+                {
+                    'data': 'about:blank',
+                    'mime_type': 'text/plain',
+                    'metadata': {}
+                }
+            ]
 
         conversation.responses.append(response)
 
