@@ -2,6 +2,7 @@ import asyncio
 import json
 import time
 import uuid
+from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
@@ -79,14 +80,14 @@ def generate_conversation(request: ChatCompletionRequest) -> Conversation:
 
 
 def create_chunk(
-    content: str, model: str, role: str = None, finish_reason: str = None
+    content: str, model: str | Any, role: str = None, finish_reason: str = None
 ) -> str:
     """Create an SSE formatted chunk"""
     chunk = {
         "id": f"chatcmpl-{uuid.uuid4().hex[:12]}",
         "object": "chat.completion.chunk",
         "created": int(time.time()),
-        "model": model,
+        "model": str(model),
         "choices": [
             {
                 "index": 0,
