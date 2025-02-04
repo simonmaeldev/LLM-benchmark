@@ -31,10 +31,9 @@ You can use Aider with any model supported by the `llm` library. Example:
 aider --openai-api-base http://0.0.0.0:11435/v1 --openai-api-key thisisnotakey --model openai/<model_name>
 ```
 
-Replace `<model_name>` with any model ID supported by your `llm` installation. Some examples:
-- deepseek-chat
-- claude-2
-- gpt-3.5-turbo
+Replace `<model_name>` with any model ID supported by your `llm` installation. The available models will be printed when you start the server.
+
+To add support for additional models, visit the [llm plugin directory](https://llm.datasette.io/en/stable/plugins/directory.html) and install the desired model plugins.
 
 ### Features
 
